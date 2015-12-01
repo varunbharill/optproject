@@ -1,10 +1,9 @@
 from TSP_Graph import TSP_Graph
 import numpy as np
 from Tour import Tour
-from collections import defaultdict
 import sys
 import random
-from numpy.core.fromnumeric import nonzero
+import matplotlib as plt
 
 class GA_TSP:
     
@@ -15,7 +14,7 @@ class GA_TSP:
     npop = 0
     
     #max number of generation
-    max_g = 4;
+    max_g = 200;
     
     #current population
     pop = []
@@ -51,7 +50,7 @@ class GA_TSP:
         self.pop =var;
         self._analyse_costs()
         self._sort_tours(self.pop)
-        self._print_pool(self.pop)
+#         self._print_pool(self.pop)
        
     def _sort_tours(self, pop):
         self.pop = sorted(pop, key=lambda x: x.tour_cost)
@@ -90,16 +89,17 @@ class GA_TSP:
             p1 = self._get_parent()
             p2 = self._get_parent()
             child = self._get_child(p1, p2)
+            child.tour_cost = self.graph._get_tour_cost(child.tour)
+            child = self._mutate(child)
             new_pop.append(child)
-        self.pop = new_pop
-        self._sort_tours(self.pop)
+            
         if(self.elitist):
             new_pop.append(self.pop[0])
         
         self.pop = new_pop
         self._analyse_costs()
         self._sort_tours(self.pop)
-        self._print_pool(self.pop)
+#         self._print_pool(self.pop)
         
     def _get_parent(self):
         players = np.random.randint(0,self.graph.vcount - 1, self.tournament_size)
@@ -149,7 +149,8 @@ class GA_TSP:
         a = np.random.randint(0, self.graph.vcount, 2)
         temp = t.tour[a[0]]
         t.tour[a[0]] = t.tour[a[1]]
-        t.tour[a[1]] = temp   
+        t.tour[a[1]] = temp
+        return t   
     
     
     def _run(self):
@@ -170,9 +171,14 @@ g = GA_TSP("15-cities")
 ans = g._run()
 print("ans-")
 print(ans.tour)
-
+ 
 print("avg")
 print(g.average_cost)
-
+ 
 print("min_cost")
 print(g.min_cost)
+
+true_opt = np.asarray([1,13, 2,15, 9, 5, 7, 3,12,14,10, 8, 6, 4,11]) - 1
+true_cost = g.graph._get_tour_cost(true_opt)
+print(true_cost,true_opt)
+
