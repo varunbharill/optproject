@@ -17,7 +17,9 @@ class TSP_Graph:
         cost = 0;
         for c in range(0, t.size - 1):
             cost = cost + self.graph_matrix[t[c],t[c+1]]
+#             print(t[c],t[c+1],self.graph_matrix[t[c],t[c+1]])
         cost  = cost + self.graph_matrix[t[0],t[t.size - 1]]
+#         print(t[t.size - 1],t[0],self.graph_matrix[t[t.size - 1],t[0]])
         return cost;
             
         

@@ -3,7 +3,7 @@ import numpy as np
 from Tour import Tour
 import sys
 import random
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 class GA_TSP:
     
@@ -14,7 +14,7 @@ class GA_TSP:
     npop = 0
     
     #max number of generation
-    max_g = 200;
+    max_g = 100;
     
     #current population
     pop = []
@@ -28,6 +28,7 @@ class GA_TSP:
     modified_pop_cost = 0
     
     best_tour = Tour()
+    best_tour.tour_cost = sys.maxint
     
     tournament_size = 6
     
@@ -36,7 +37,7 @@ class GA_TSP:
     def __init__(self, filename):
         self.graph = TSP_Graph(filename, 15)
         self.graph._read_data()
-        self.npop = self.graph.vcount * 2
+        self.npop = self.graph.vcount * 4
         
         
     def _create_init_pop(self):
@@ -47,25 +48,24 @@ class GA_TSP:
             temp_tour.tour = temp
             temp_tour.tour_cost = self.graph._get_tour_cost(temp_tour.tour)
             var.append(temp_tour)
+            if(self.best_tour.tour_cost > temp_tour.tour_cost):
+                self.best_tour.tour = np.zeros(self.graph.vcount) + temp_tour.tour
+                self.best_tour.tour_cost = temp_tour.tour_cost
         self.pop =var;
-        self._analyse_costs()
         self._sort_tours(self.pop)
+        self._analyse_costs()
+        
 #         self._print_pool(self.pop)
        
     def _sort_tours(self, pop):
         self.pop = sorted(pop, key=lambda x: x.tour_cost)
     
     def _analyse_costs(self):
-        sum_cost = 0;
-        min_cost = sys.maxint
+        sum_cost = 0
+        self.min_cost.append(self.pop[0].tour_cost)
         for i in range(0,self.npop):
             sum_cost = sum_cost + self.pop[i].tour_cost
-            if(min_cost > self.pop[i].tour_cost):
-                min_cost = self.pop[i].tour_cost
-                self.best_tour = self.pop[i]
-                 
         self.average_cost.append(sum_cost/self.npop)
-        self.min_cost.append(min_cost)
          
         
 #     def _create_mating_pool(self):
@@ -90,16 +90,24 @@ class GA_TSP:
             p2 = self._get_parent()
             child = self._get_child(p1, p2)
             child.tour_cost = self.graph._get_tour_cost(child.tour)
-            child = self._mutate(child)
             new_pop.append(child)
-            
+            if(self.best_tour.tour_cost > child.tour_cost):
+                self.best_tour.tour = np.zeros(self.graph.vcount) + child.tour
+                self.best_tour.tour_cost = child.tour_cost
         if(self.elitist):
             new_pop.append(self.pop[0])
         
         self.pop = new_pop
-        self._analyse_costs()
         self._sort_tours(self.pop)
+        self._analyse_costs()
+        for i in range(self.elitist,self.npop):
+            self.pop[i] = self._mutate(self.pop[i])
+            self.pop[i].tour_cost = self.graph._get_tour_cost(self.pop[i].tour)
+            if(self.best_tour.tour_cost > self.pop[i].tour_cost):
+                self.best_tour.tour = np.zeros(self.graph.vcount) + self.pop[i].tour
+                self.best_tour.tour_cost = self.pop[i].tour_cost
 #         self._print_pool(self.pop)
+        self._sort_tours(self.pop)
         
     def _get_parent(self):
         players = np.random.randint(0,self.graph.vcount - 1, self.tournament_size)
@@ -171,14 +179,20 @@ g = GA_TSP("15-cities")
 ans = g._run()
 print("ans-")
 print(ans.tour)
- 
+   
 print("avg")
 print(g.average_cost)
- 
+   
 print("min_cost")
 print(g.min_cost)
 
 true_opt = np.asarray([1,13, 2,15, 9, 5, 7, 3,12,14,10, 8, 6, 4,11]) - 1
+true_opt1 = np.asarray([ 12. ,  0. , 10.  , 3.  , 5. ,  7. ,  9. , 13.,  11. ,  2.,   8. ,  4.,   6. , 14.,   1.])
 true_cost = g.graph._get_tour_cost(true_opt)
 print(true_cost,true_opt)
+true_cost1 = g.graph._get_tour_cost(true_opt1)
+
+print(true_cost1,true_opt1)
+plt.scatter(range(0,g.average_cost.__len__()),g.average_cost)
+plt.show()
 
